@@ -19,6 +19,8 @@ class DirectoryTree:
 
     def generate(self):
         tree = self._generator.build_tree()
+        for entry in tree:
+            print(entry)
         if self._output_file != sys.stdout:
             # Wrap the tree in a markdown code
             tree.insert(0, "```")
