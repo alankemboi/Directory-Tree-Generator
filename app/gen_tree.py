@@ -11,12 +11,12 @@ TEE = "├──"
 PIPE_PREFIX = "│   "
 SPACE_PREFIX = "    "
 
+exclude_list = [".git","__pycache__"]
 
 class DirectoryTree:
-    def __init__(self, root_dir, dir_only=False, output_file=sys.stdout):
+    def __init__(self, root_dir, dir_only=False, output_file=sys.stdout, levels=999):
         self._output_file = output_file
-        self.maxdepth = 99
-        self._generator = _TreeGenerator(root_dir, dir_only, self.maxdepth )
+        self._generator = _TreeGenerator(root_dir, dir_only, levels )
 
     def generate(self):
         tree = self._generator.build_tree()
@@ -35,12 +35,12 @@ class DirectoryTree:
 
 
 class _TreeGenerator:
-    def __init__(self, root_dir, dir_only=False, maxdepth=999):
+    def __init__(self, root_dir, dir_only=False, levels=999):
         self._root_dir = pathlib.Path(root_dir)
         self._dir_only = dir_only
         self._tree = []
-        self.maxdepth = maxdepth
-        self.depth = 0
+        self.levels = levels
+        self.level = 0
 
     def build_tree(self):
         self._tree_head()
@@ -49,24 +49,27 @@ class _TreeGenerator:
 
     def _tree_head(self):
         self._tree.append(f"{self._root_dir}{os.sep}")
-        self._tree.append(PIPE)
+        if not self._dir_only:
+            self._tree.append(PIPE)
 
     def _tree_body(self, directory, prefix=""):
-        self.depth = self.depth + 1
-        if self.depth > self.maxdepth:
-            return
+        self.level = self.level + 1
         entries = self._prepare_entries(directory)
         entries = sorted(entries, key=lambda entry: entry.is_file())
         entries_count = len(entries)
         for index, entry in enumerate(entries):
-            connector = ELBOW if index == entries_count - 1 else TEE
-            if entry.is_dir():
-                self._add_directory(
-                    entry, index, entries_count, prefix, connector
-                )
-            else:
-                self._add_file(entry, prefix, connector)
-        self.depth = self.depth - 1
+            if not entry.name in exclude_list:
+                connector = ELBOW if index == entries_count - 1 else TEE
+                if entry.is_dir():
+                    if self.level < self.levels:
+                        self._add_directory(
+                            entry, index, entries_count, prefix, connector
+                        )
+                    else:
+                        self._add_file( entry, prefix, connector )
+                else:
+                    self._add_file(entry, prefix, connector)
+        self.level = self.level - 1
 
     def _prepare_entries(self, directory):
         entries = directory.iterdir()
@@ -88,7 +91,11 @@ class _TreeGenerator:
             directory=directory,
             prefix=prefix
         )
-        self._tree.append(prefix.rstrip())
+        if not self._dir_only:
+            self._tree.append(prefix.rstrip())
 
     def _add_file(self, file, prefix, connector):
-        self._tree.append(f"{prefix}{connector}{file.name}")
+        postfix = ""
+        if file.is_dir():
+            postfix = os.sep
+        self._tree.append(f"{prefix}{connector}{file.name}{postfix}")
