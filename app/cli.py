@@ -29,6 +29,15 @@ def parse_cmd_line_arguments():
         action="store_true",
         help="Generate a directory only tree"
     )
+    parse.add_argument(
+        "-l",
+        "--levels",
+        nargs="?",
+        default = 999,
+        type=int,
+        help="Levels of depth to traverse"
+    )
+
     parse.add_argument("-v", "--version", action="version")
     parse.add_argument(
         "root_dir",

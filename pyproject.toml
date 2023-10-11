@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "fork-directory-tree-generator"
+version = "0.1.0"
+description = "Fork of Directory Tree Generator"
+authors = ["John Leonard <john@lowkeylabs.com>"]
+readme = "README.md"
+packages = [
+    {include = "app"}
+]
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+
+[tool.poetry.scripts]
+dirtree = "app:main.main"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
